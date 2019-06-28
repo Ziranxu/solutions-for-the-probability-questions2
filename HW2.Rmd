@@ -1,0 +1,247 @@
+---
+title: "HW2"
+author: "Ziran Xu"
+date: "3/6/2019"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Q1
+Since f(x) = 2 *exp(-2*x) then F(x) is the integration of f(x).
+   F(x) = 1-exp(-2*x)
+   U = 1-exp(-2*x)
+   so x = -log(1-U) / 2   
+Hence need to generate 100 uniform random numbers from 0 to 1
+Then can generate random sample size 100 from this distribution
+```{r}
+u1 = runif(100,min = 0,max = 1)
+randnum_Q1 = -log(1-u1) / 2
+mean_Q1 = mean(randnum_Q1)
+var_Q1 = var(randnum_Q1)    
+cat("The mean and Var are ",mean_Q1,var_Q1,"\n\n")
+fit = lm(randnum_Q1~log(1-u1))
+summary(fit)
+```
+Hence the EDF is x = -5.000e-01*log(1-u)
+
+## Q2
+Since the variance is 1 and the variance of the double exponential distribution is 2*beta^2. Hence the beta = 1/sqrt(2). From the question abs(beta) = k , k = 1/sqrt(2). C = 1/(2*beta) then C = sqrt(2) / 2.
+   g(x) = sqrt(2) * exp(-abs(x)/sqrt(2)) / 2
+   f(x) = exp(-x^2/2) / sqrt(2*pi)
+   M >= f(x)/g(x) hence M = max(f(x)/g(x)) = 0.7244 while x = +/- 1/sqrt(2)
+   
+```{r}
+x2 = rnorm(100)
+u2 = runif(100)
+y2 =rep(NA,100)
+M = 0.7244
+for(i in 1:100)
+{
+  if((exp(-(x2[i])^2/2) / sqrt(2*pi)) /(M*sqrt(2) * exp(-abs(x2[i])/sqrt(2)) / 2) >u2[i])
+    y2[i] = x2[i]
+}
+y2 =na.omit(y2)
+cat("The resulting sample size is",length(y2))
+```
+## Q3
+while alpha = 3, the first integration is 3*x*exp(-3*x) from [0,Inf) and the second integration is 3*log(x)*exp(-3*x) from [0,Inf).
+
+```{r}
+u3 = runif(100,min = 0,max = 1)
+num3_1 = -log(1-u3)/3  # generate the exponential r.v
+inte_3_11 = mean(num3_1)  # the first integral is the expectation of exponential distribution
+inte_3_12 = mean(log(num3_1))   # the second integral is the expectation of log fucntion with exponential distribution
+cat("The first integral is ",inte_3_11,"and the second integral is",inte_3_12)
+```
+while alpha = 4, the first integration is 4*x*exp(-4*x) from [0,Inf) and the second integration is 4*log(x)*exp(-4*x) from [0,Inf)
+```{r}
+num3_2 = -log(1-u3)/4  # generate the exponential r.v
+inte_3_21 = mean(num3_2)  # the first integral is the expectation of exponential distribution
+inte_3_22 = mean(log(num3_2))   # the second integral is the expectation of log fucntion with exponential distribution
+cat("The first integral is ",inte_3_21,"and the second integral is ",inte_3_22)
+```
+## Q4
+First generate the r.v from uniform distribution then change into the possion distrition. Finally calculate the P(x>2)
+```{r}
+u4 = runif(100,min = 0,max = 1)
+num4 = 1:length(u4)
+f4 = function(x,u)
+{
+  return(1.5^x*exp(-1.5)/prod(1:x)-u)
+}
+for(i in 1:length(u4))
+{
+  root = uniroot(f4,c(0,1000),u = u4[i])
+  num4[i] = root$root
+}
+p = length(num4[num4>2])/length(num4)
+cat("The P(X>2) = ",p)
+```
+## Q5
+Since here alpha = 4 and lambda is 2. xi ~ Exp(2) then Y = sum(xi) from 1 to 4.
+
+```{r}
+num5_gamma = 1:100
+p5 = rep(1,100)
+for(i in 1:100)
+{
+  u5 = runif(4,min = 0,max = 1)
+  num5 = -log(1-u5) /2
+  num5_gamma[i] = sum(num5)  #gamma distribution Gamma(4, 2) as a sum of exponentials.
+  for(j in 1:4)
+  {
+    p5[i] = p5[i]*(1-exp(-2*num5[j]))  # since they are independent so can multiply
+  }
+}
+cat("The gamma random numbers are ",num5_gamma,"\nThen probability corresponded with these numbers are ",p5)
+```
+Then can get more random numbers to fit CDF function, then also can get the PDF.
+
+For the Accept-reject technique. The g(x) = gamma(2,1) and f(x) = gamma(4,2)
+Then find the M >= f(x)/g(x) = 1.444 when x = 2
+```{r}
+y5 = rep(NA,100)
+x5= 1:100
+M = 1.44
+for(i in 1:100)
+{
+  u5 = runif(4,min = 0,max = 1)
+  num5 = -log(1-u5) /2
+  x5[i] = sum(num5)  #gamma distribution Gamma(4, 2) as a sum of exponentials.
+}
+u5_2 = runif(100,min = 0,max = 1)
+for(i in 1:100)
+{
+  if((8*x5[i]^2*exp(-x5[i])/(3*M))>u5_2[i])
+{
+  y5[i] = x5[i]
+}
+}
+y5 = na.omit(y5)
+cat("The random number from gamma(2,1) are ",y5)
+```
+## Q6
+Since as the question required we need 100 simulations and n =100
+To calcualte the E(x^2) then calculate the sum(xi^2)/(2*n) from 1 to 2*n
+```{r}
+u6 = runif(100,min = 0,max = 1)
+un6 = 1-u6   # antithetic values
+s= 0
+for(i in 1:100)
+{
+  s = s+u6[i]^2+un6[i]^2
+}
+result1 = s/200  
+cat("The E(x^2) is",result1)
+```
+To cauculate the Var(h2n) , h(x) = x^2. Need to get the E(x) first, then Var(h2n) = E(x^2) - (E(x))^2
+```{r}
+s = 0
+for( i in 1:100)
+{
+  s = s +u6[i]+un6[i]
+}
+result2 = s/200
+cat("The Var(h2n) is ",result1-result2^2)
+```
+## Q7
+From the question request 100 simulations with n = 100.
+h(x) = x^2 and g(x) =x.
+To calculate the E(x^2) and Var(hCV)
+E(x^2) = E(h(x)-g(x)) +E(g(x)) = sum(h(xi) - g(xi))/n + sum(g(xi))/n 
+Var(hCV) = Var(sum(h(xi)-g(xi))/n^2) = sum(Var(h(Xi))+Var(g(Xi))-2*cov(h(Xi),g(Xi)))/n^2
+```{r}
+u7 = runif(100,max = 1,min = 0)
+s1=0
+s2=0
+mean1 = mean(u7^2)
+mean2 = mean(u7)
+for(i in 1:100)
+{
+  s1 = s1+(u7[i]^2-u7[i])
+  s2 = s2+u7[i]
+}
+result1 = s1/100+s2/100
+cat("The E(x^2) is ",result1)
+s3=0
+for(i in 1:100)
+{
+  s3 = s3+(u7[i]^2-mean1)^2+(u7[i]-mean2)^2-2*(u7[i]^2-mean1)*(u7[i]-mean2)
+}
+result2 = (s3)/100^2
+cat("\nThe Var(hCV) is ",result2 )
+```
+## Q8
+From the question request 100 simulations with n = 100.
+```{r}
+u81 = runif(20,min = 0,max = 0.2)
+u82 = runif(20,min = 0.2,max = 0.4)
+u83 = runif(20,min = 0.4,max = 0.6)
+u84 = runif(20,min = 0.6,max = 0.8)
+u85 = runif(20,min = 0.8,max = 1)
+mean11 = mean(u81^2)
+mean12 = mean(u82^2)
+mean13 = mean(u83^2)
+mean14 = mean(u84^2)
+mean15 = mean(u85^2)
+mean21 = mean(u81)
+mean22 = mean(u82)
+mean23 = mean(u83)
+mean24 = mean(u84)
+mean25 = mean(u85)
+s1 = 0
+for(i in 1:20)
+{
+  s1 = s1 +u81[i]^2+u82[i]^2+u83[i]^2+u84[i]^2+u85[i]^2
+}
+result1 = s1/100
+cat("The E(x^2) is ",result1)
+s2=0
+for(i in 1:20)
+{
+  s3 = s3+(u81[i]^2-mean11)^2+(u81[i]-mean21)^2-2*(u81[i]^2-mean11)*(u81[i]-mean21)+(u82[i]^2-mean12)^2+(u82[i]-mean22)^2-2*(u82[i]^2-mean12)*(u82[i]-mean22)+(u83[i]^2-mean13)^2+(u83[i]-mean23)^2-2*(u83[i]^2-mean13)*(u83[i]-mean23)+(u84[i]^2-mean14)^2+(u84[i]-mean24)^2-2*(u84[i]^2-mean14)*(u84[i]-mean24)+(u85[i]^2-mean15)^2+(u85[i]-mean25)^2-2*(u85[i]^2-mean15)*(u85[i]-mean25)
+}
+result2 = s3/100^2
+cat("\nThe Var(hCV) is ",result2 )
+```
+## Graphs in Q1 
+```{r pressure, echo=FALSE}
+hist(randnum_Q1,breaks = 8,main = "Histogram of Q1",xlab = "random numbers of Q1")
+```
+```{r pressure, echo=FALSE}
+plot(x= u1 ,y = randnum_Q1,,ylim =c(0,5),xlim = c(0,1),main = "The original data graph")   # from the graph, need to fit as an exponential function
+```
+```{r pressure, echo=FALSE}
+plot(x = u1,y = -5.000e-01*log(1-u1),ylim =c(0,5),xlim = c(0,1),main = "The graph of fitting function")
+```
+## Graphs in Q2
+```{r pressure, echo=FALSE}
+hist(y2,breaks = 8,main = "Histogram of Q2",xlab = "random numbers of Q2")
+```
+## Graphs in Q3
+```{r pressure, echo=FALSE}
+hist(num3_1,breaks = 8,main = "Histogram of Q3",xlab = "random numbers of Q3")
+```
+```{r pressure, echo=FALSE}
+hist(num3_2,breaks = 8,main = "Histogram of Q3",xlab = "random numbers of Q3")
+```
+## Graphs in Q4
+```{r pressure, echo=FALSE}
+hist(num4,breaks = 8,main = "Histogram of Q4",xlab = "random numbers of Q4")
+```
+
+## Graphs in Q5
+```{r pressure, echo=FALSE}
+hist(y5,breaks = 8,main = "Histogram of Q5",xlab = "random numbers of Q5")
+```
+## Graphs in Q6
+```{r pressure, echo=FALSE}
+hist(c(un6,u6),breaks = 8,main = "Histogram of Q6",xlab = "random numbers of Q6")
+```
